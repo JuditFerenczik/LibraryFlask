@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, SelectField
-from wtforms.validators import DataRequired, IPAddress, URL
+from wtforms import StringField, SubmitField, SelectField
+from wtforms.validators import DataRequired
 #import sqlite3
 from flask_sqlalchemy import SQLAlchemy
 
@@ -19,7 +19,6 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///new-books-collection.db"
-#Optional: But it will silence the deprecation warning in the console.
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 app.app_context().push()
@@ -40,22 +39,18 @@ db.create_all()
 
 class LibraryForm(FlaskForm):
     book = StringField('Book name', validators=[DataRequired()])
-
     author = StringField('Book author', validators=[DataRequired()])
-
     rating = SelectField(u'Rating', choices=[( '☕'), ('☕☕'), ('☕☕☕'), ('☕☕☕☕'), ('☕☕☕☕☕')],validators=[DataRequired()])
-
     submit = SubmitField('Ad book')
 
 
 @app.route('/')
 def home():
     all_books = Book.query.all()
-    print(all_books)
-    return render_template("index.html",all_books=all_books)
+    return render_template("index.html", all_books=all_books)
 
 
-@app.route('/edit/<int:id>', methods=["GET","POST"])
+@app.route('/edit/<int:id>', methods=["GET", "POST"])
 def edit(id):
     modifyBook = Book.query.get(id)
     if request.method == "POST":
@@ -64,23 +59,20 @@ def edit(id):
         db.session.commit()
         all_books = Book.query.all()
         return  render_template("index.html", all_books=all_books)
-    return render_template("edit.html", book = modifyBook)
+    return render_template("edit.html", book=modifyBook)
 
 
-@app.route('/delete/<int:id>', methods=["GET","POST"])
+@app.route('/delete/<int:id>', methods=["GET", "POST"])
 def delete(id):
     modifyBook = Book.query.get(id)
-    print(modifyBook, "to delete")
-    print("try to delete")
     db.session.delete(modifyBook)
     db.session.commit()
     all_books = Book.query.all()
-    print("and all books", all_books)
     return render_template("index.html", all_books=all_books)
+
 
 @app.route("/add",methods=["GET", "POST"])
 def add():
-    form = LibraryForm()
     if request.method == "POST":
         book=request.form["book"]
         author=request.form["author"]
@@ -90,16 +82,11 @@ def add():
         tmp["author"] = author
         tmp["rating"]= float(rating)
         booktmp = Book(title=book, author=author, rating=rating)
-
         db.session.add(booktmp)
         db.session.commit()
-
         all_books = Book.query.all()
-        print(request.form)
-        print(tmp)
-        print(all_books)
-        return render_template("index.html",all_books=all_books)
-    return render_template("add.html", form=form)
+        return render_template("index.html", all_books=all_books)
+    return render_template("add.html")
 
 
 if __name__ == "__main__":
